@@ -134,7 +134,14 @@ fn run(args: ProgramArgs) {
                     }
                 }
             }
-            let avg = (sum / info.received as u32).as_millis() as u64;
+
+            let timeout_millis = timeout.as_millis() as u64;
+            let avg;
+            if info.received > 0 {
+                avg = (sum / info.received as u32).as_millis() as u64;
+            } else {
+                avg = timeout_millis;
+            }
 
             latencies.sort();
 
@@ -148,7 +155,6 @@ fn run(args: ProgramArgs) {
                 percentile50 = latencies[(latencies.len() as f64 * 0.50) as usize];
                 percentile99 = latencies[(latencies.len() as f64 * 0.99) as usize];
             } else {
-                let timeout_millis = timeout.as_millis() as u64;
                 min = timeout_millis;
                 max = timeout_millis;
                 percentile50 = timeout_millis;
