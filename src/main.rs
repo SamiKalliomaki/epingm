@@ -6,6 +6,7 @@ use std::{
     thread,
     time::{Duration, Instant},
 };
+use textplots::{Chart, Plot, Shape, LabelBuilder, LabelFormat};
 use volley::{measure_volley, VolleyResult};
 
 use crate::volley::PingResult;
@@ -33,7 +34,7 @@ struct ProgramArgs {
     size: usize,
 
     /// Maximum number of seconds to wait for a reply.
-    #[arg(long, default_value = "10")]
+    #[arg(long, default_value = "1")]
     timeout: f32,
 
     /// Seconds between each volley.
@@ -47,6 +48,22 @@ struct ProgramArgs {
     /// Targets to ping
     #[arg(required = true)]
     target: Vec<String>,
+
+    /// Display a graph of the ping results.
+    #[arg(long)]
+    graph: bool,
+
+    /// Graph width.
+    #[arg(long, default_value = "300")]
+    graph_width: u32,
+
+    /// Graph height.
+    #[arg(long, default_value = "100")]
+    graph_height: u32,
+
+    /// Graph maximum latency.
+    #[arg(long, default_value = "0.1")]
+    graph_max_latency: f32,
 }
 
 fn secs_to_duration(secs: f32) -> Duration {
@@ -90,9 +107,7 @@ fn run(args: ProgramArgs) {
     match format {
         Format::Text => {}
         Format::Csv => {
-            println!(
-                "time,target,ip,received,sent,lost,avg,min,max,50th,99th,missing"
-            );
+            println!("time,target,ip,received,sent,lost,avg,min,max,50th,99th,missing");
         }
     }
 
@@ -198,6 +213,33 @@ fn run(args: ProgramArgs) {
                         missing
                     );
                 }
+            }
+
+            if args.graph {
+                let mut values: Vec<(f32, f32)> = Vec::new();
+                for (i, result) in info.results.iter().enumerate() {
+                    match result {
+                        None => {}
+                        Some(PingResult {
+                            latency,
+                            reply_size: _,
+                        }) => {
+                            values.push((i as f32, latency.as_nanos() as f32 / 1e6));
+                        }
+                    }
+                }
+
+                Chart::new_with_y_range(
+                    args.graph_width,
+                    args.graph_height,
+                    0.0,
+                    (count - 1) as f32,
+                    0.0,
+                    args.graph_max_latency * 1000.0,
+                )
+                .lineplot(&Shape::Points(&values))
+                .x_label_format(LabelFormat::None)
+                .display();
             }
         }
 

@@ -1,6 +1,6 @@
 [package]
 name = "epingm"
-version = "0.1.1"
+version = "0.2.0"
 edition = "2021"
 license = "MIT"
 repository = "https://github.com/SamiKalliomaki/epingm"
@@ -14,3 +14,4 @@ clap = { version = "4.5.1", features = ["derive"] }
 oneshot = { version = "0.1.6", features = ["std"] }
 pnet = "0.34.0"
 rand = "0.8.5"
+textplots = "0.8.6"
